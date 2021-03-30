@@ -14,18 +14,18 @@ ENT.PersistentWeapons = {
 -- Add loadouts here.
 ENT.Loadouts = {
     ["Citizen Loadout"] = {
-        teams = {
-            TEAM_CITIZEN,
-            TEAM_GUNDEALER
+        teams = { -- Optional: If not specified this loadout will be available to everyone.
+            [TEAM_CITIZEN] = true,
+            [TEAM_GUNDEALER] = true
         },
-        weapons = {
+        weapons = { -- Required: Weapons to give player upon equipping loadout.
             "weapon_fists",
             "gmod_camera"
         }
     },
     ["Shotgun"] = {
         teams = {
-            TEAM_GUNDEALER
+            [TEAM_GUNDEALER] = true
         },
         weapons = {
             "weapon_shotgun"
@@ -40,8 +40,26 @@ ENT.Loadouts = {
     },
     ["Rocket Launcher"] = {
         teams = {
-            TEAM_GUNDEALER
+            [TEAM_GUNDEALER] = true
         },
+        weapons = {
+            "weapon_rpg"
+        },
+        ammo = {
+            ["buckshot"] = 20
+        },
+        addition = true,
+        incompatible = {
+            "weapon_shotgun"
+        }
+    },
+    ["Rocket Launcher"] = {
+        teams = {
+            [TEAM_CITIZEN] = true
+        },
+        custom_check = function (ply) -- Optional: Additional requirement
+            return ply:GetName() == "Rocket Man"
+        end,
         weapons = {
             "weapon_rpg"
         },

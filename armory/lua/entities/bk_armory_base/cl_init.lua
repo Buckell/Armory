@@ -39,7 +39,7 @@ surface.CreateFont("Armory.Small", {
 function ENT:Draw()
 	self:DrawModel()
 
-    local sqr_dist = ply:GetPos():DistToSqr(self:GetPos())
+    local sqr_dist = LocalPlayer():GetPos():DistToSqr(self:GetPos())
     local alpha = 255
     if sqr_dist > 90000 then alpha = Lerp((sqr_dist - 90000) / 90000, 255, 0) end 
     if alpha == 0 then return end
@@ -50,29 +50,25 @@ function ENT:Draw()
 	local ang = self:GetAngles()
 	local pos = self:GetPos()
 
-	ang:RotateAroundAxis( oang:Up(), 90 )
-	ang:RotateAroundAxis( oang:Right(), -90 )
-	ang:RotateAroundAxis( oang:Up(), -4)
+	ang:RotateAroundAxis(oang:Up(), 90)
+	ang:RotateAroundAxis(oang:Right(), -90)
+	ang:RotateAroundAxis(oang:Up(), -4)
 
-	pos = pos + oang:Forward()*14 + oang:Up() * 20 + oang:Right() * 20
+	pos = pos + oang:Forward() * 14 + oang:Up() * 20 + oang:Right() * 20
 
-    cam.Start3D2D( pos, ang, 0.025 )
-        draw.SimpleText(self.PrintName, "Armory.Large", 0, 0, Color(255,255,255, alpha) )
-        draw.DrawText("Press your 'use' key to access the armory.", "Armory.Small", 0, 128, Color(255,255,255, alpha) )
+    cam.Start3D2D(pos, ang, 0.025)
+        draw.SimpleText(self.PrintName, "Armory.Large", 0, 0, Color(255,255,255, alpha))
+        draw.DrawText("Press your 'use' key to access the armory.", "Armory.Small", 0, 128, Color(255,255,255, alpha))
     cam.End3D2D()
 end
 
 function ENT:OpenArmoryPanel()
     local ply = LocalPlayer()
-    local loadouts_num = 0
-
-    for _,_ in pairs(Armory.RussianArmoryLoadouts) do
-        loadouts_num = loadouts_num + 1
-    end
+    local loadout_count = table.Count(self.Loadouts)
 
     local ArmoryFrame = vgui.Create("MRPFrame")
     ArmoryFrame:SetTitle("Russian Armory")
-    ArmoryFrame:SetSize(1380, 130 + (math.ceil(loadouts_num / 5) * 140))
+    ArmoryFrame:SetSize(loadout_count < 3 and  or 1380, 130 + (math.ceil(loadout_count / 3) * 140))
     ArmoryFrame:Center()
     ArmoryFrame:MakePopup()
 
@@ -80,13 +76,17 @@ function ENT:OpenArmoryPanel()
     JobLabel:SetText(team.GetName(ply:Team()))
     JobLabel:SetFont("DermaLarge")
     JobLabel:SetPos(30, 30)
-    JobLabel:SetSize(1320, 70)
+    JobLabel:SetSize(ArmoryFrame:GetWide() - 60, 70)
     JobLabel:SetContentAlignment(5)
 
     local x_offset = 30
     local y_offset = 110
 
-    for name, loadout in pairs(Armory.RussianArmoryLoadouts) do
+    for name, loadout in pairs(self.Loadouts) do
+        if loadout.teams and loadout.teams[ply:Team()] then
+            break
+        end
+        
         local LoadoutPanel = vgui.Create("DPanel", ArmoryFrame)
         LoadoutPanel:SetPos(x_offset, y_offset)
         LoadoutPanel:SetSize(240, 130)
@@ -102,18 +102,12 @@ function ENT:OpenArmoryPanel()
         LoadoutName:SetContentAlignment(5)
         
         x_offset = x_offset + 270
-        if (x_offset == 1380) then
+        if (x_offset == 740) then
             x_offset = 30
             y_offset = y_offset + 140
         end
 
-        local weapon_list = ""
-
-        for i, weapon in ipairs(loadout.weapons) do
-            local cat = ""
-            if i ~= 1 then cat = ", " else cat = "" end
-            weapon_list = weapon_list .. cat .. weapon
-        end
+        local weapon_list = table.concat(loadout.weapons, ", ")
 
         local LoadoutWeapons = vgui.Create("DLabel", LoadoutPanel)
         LoadoutWeapons:SetText(weapon_list)
@@ -124,29 +118,32 @@ function ENT:OpenArmoryPanel()
         LoadoutWeapons:SetWrap(true)
 
         local SwitchLoadout = vgui.Create("DButton", LoadoutPanel)
-        if table.HasValue(loadout.access_teams, ply:getJobTable().command) then
-            SwitchLoadout:SetText("Choose")
-            SwitchLoadout.Paint = function(self, w, h)
-                draw.RoundedBox(0, 0, 0, w, h, Color(41, 128, 185, 250))
-            end
-            SwitchLoadout.DoClick = function()
-                net.Start("Armory.Russian.Choose")
-                net.WriteString(name)
-                net.SendToServer()
-                ArmoryFrame:Close()
-            end
-        else
-            SwitchLoadout:SetText("Locked")
-            SwitchLoadout.Paint = function(self, w, h)
-                draw.RoundedBox(0, 0, 0, w, h, Color(40, 40, 40, 188))
-            end
+        SwitchLoadout:SetText("Select")
+        
+        SwitchLoadout.Paint = function(self, w, h)
+            draw.RoundedBox(0, 0, 0, w, h, Color(41, 128, 185, 250))
         end
+
+        SwitchLoadout.DoClick = function()
+            net.Start("Armory.Select")
+            net.WriteEntity(self)
+            net.WriteString(name)
+            net.SendToServer()
+            
+            ArmoryFrame:Close()
+        end
+
         SwitchLoadout:SetTextColor(Color(255,255,255))
         SwitchLoadout:SetPos(50, 90)
         SwitchLoadout:SetSize(140, 30)
     end
 end
 
-net.Receive("Armory.Russian.Open", function()
-    RussianArmoryPanel(net.ReadString(), net.ReadTable())
+net.Receive("Armory.Open", function ()
+    local armory = net.ReadEntity()
+    armory:OpenArmoryPanel()
+end)
+
+net.Receive("Armory.NicePrint", function ()
+    chat.AddText(Color(255, 0, 0), "[Armory] ", Color(255, 255, 255), net.ReadString())
 end)

@@ -31,6 +31,13 @@ include("shared.lua")
 
 util.AddNetworkString("Armory.Open")
 util.AddNetworkString("Armory.Select")
+util.AddNetworkString("Armory.NicePrint")
+
+local function NicePrint(ply, string)
+    net.Start("Armory.NicePrint")
+    net.WriteString(string)
+    net.Send(ply)
+end
 
 function ENT:Use(ply)
     if ply:IsPlayer() then
@@ -41,6 +48,8 @@ function ENT:Use(ply)
 end
 
 net.Receive("Armory.Select", function (len, ply)
+    if not ply:IsPlayer() then return end
+    
     local armory = net.ReadEntity()
     local loadout = net.ReadString()
 
@@ -48,11 +57,14 @@ net.Receive("Armory.Select", function (len, ply)
 
     local loadout_tb = armory.Loadouts[loadout]
 
-    if not loadout_tb then return end
+    if not loadout_tb or not loadout_tb.weapons then return end
     
     if armory:GetPos():DistToSqr(ply:GetPos()) > 9000 then return end
     
-    if not loadout_tb.teams[ply:Team()] then return end
+    if loadout_tb.teams and not loadout_tb.teams[ply:Team()] then
+        
+        return
+    end
 
     if not loadout_tb.addition then
         ply:StripAmmo()
