@@ -1,0 +1,11 @@
+"AddonInfo"
+{
+    "name"         "Armory"
+    "version"      "1"
+    "up_date"      "3/29/2021"
+    "author_name"  "Buckell"
+    "author_email" "max@altis.gg"
+    "author_url"   "https://altis.gg/"
+    "info"         "An addon for Garry's Mod that adds in armories that can be customized for multiple factions. There are a list of loadouts and each loadout has a list of teams that can use it."
+    "override"     "0"
+}
