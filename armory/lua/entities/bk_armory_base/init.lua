@@ -40,6 +40,43 @@ function ENT:Use(ply)
     end
 end
 
-net.Receive("Armory.Receive", function (len, ply)
+net.Receive("Armory.Select", function (len, ply)
+    local armory = net.ReadEntity()
+    local loadout = net.ReadString()
+
+    if not armory.Loadouts then return end
+
+    local loadout_tb = armory.Loadouts[loadout]
+
+    if not loadout_tb then return end
     
+    if armory:GetPos():DistToSqr(ply:GetPos()) > 9000 then return end
+    
+    if not loadout_tb.teams[ply:Team()] then return end
+
+    if not loadout_tb.addition then
+        ply:StripAmmo()
+
+        if armory.PersistentWeapons then
+            for _,v in ipairs(ply:GetWeapons()) do
+                local class = v:GetClass()
+
+                if armory.PersistentWeapons[class] then
+                    ply:StripWeapon(class)
+                end
+            end
+        end
+    end
+
+    for _,v in ipairs(loadout_tb.incompatible or {}) then
+        ply:StripWeapon(v)
+    end
+
+    for k,v in pairs(loadout_tb.ammo or {}) do
+        ply:GiveAmmo(v, k)
+    end
+
+    for _,v in ipairs(loadout_tb.weapons or {}) do
+        ply:Give(v)
+    end
 end)

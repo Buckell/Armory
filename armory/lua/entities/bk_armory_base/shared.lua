@@ -21,5 +21,23 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ]]--
 
 ENT.Type = "anim"
-
 ENT.Spawnable = false
+ENT.Category = "Buckell's"
+ENT.WorldModel = "models/props_wasteland/controlroom_storagecloset001a.mdl"
+
+function ENT:Initialize()
+	self:SetModel(self.WorldModel)
+	self:SetMoveType(MOVETYPE_VPHYSICS)
+	self:SetSolid(SOLID_VPHYSICS)
+ 	
+    if SERVER then 
+        self:PhysicsInit(SOLID_VPHYSICS)
+        self:SetUseType(SIMPLE_USE)
+    end
+
+    local phys = self:GetPhysicsObject()
+	if (phys:IsValid()) then
+		phys:Wake()
+		phys:SetMass(50)
+	end
+end

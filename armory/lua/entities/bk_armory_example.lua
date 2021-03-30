@@ -7,8 +7,8 @@ ENT.Spawnable = true
 -- List of weapons that won't be removed when loadouts are switched.
 -- Can be overrided with the "incompatible" loadout field.
 ENT.PersistentWeapons = {
-    "weapon_physgun",
-    "weapon_physcannon"
+    ["weapon_physgun"] = true,
+    ["weapon_physcannon"] = true
 }
 
 -- Add loadouts here.
@@ -30,6 +30,9 @@ ENT.Loadouts = {
         weapons = {
             "weapon_shotgun"
         },
+        ammo = {
+            ["rocket"] = 5
+        },
         addition = true, -- Don't remove old weapons.
         incompatible = { -- These weapons will be removed when switching to this loadout. Mostly used with addition = true.
             "weapon_rpg"
@@ -41,6 +44,9 @@ ENT.Loadouts = {
         },
         weapons = {
             "weapon_rpg"
+        },
+        ammo = {
+            ["buckshot"] = 20
         },
         addition = true,
         incompatible = {
